@@ -16,8 +16,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
-  Permission permission;
+  PermissionStatus _permissionStatus = PermissionStatus.notDetermined;
+  final Permission permission = Permission.ReadExternalStorage;
+  String _gpsLocationText = "Please press button to refresh";
 
   @override
   initState() {
@@ -27,12 +28,13 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   initPlatformState() async {
-    String platformVersion;
+    PermissionStatus permissionStatus;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
-      platformVersion = await SimplePermissions.platformVersion;
+      permissionStatus =
+          await SimplePermissions.getPermissionStatus(permission);
     } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
+      permissionStatus = PermissionStatus.notDetermined;
     }
 
     // If the widget was removed from the tree while the asynchronous platform
@@ -41,46 +43,31 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     setState(() {
-      _platformVersion = platformVersion;
+      _permissionStatus = permissionStatus;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    printDirectories();
     return new MaterialApp(
       home: new Scaffold(
         appBar: new AppBar(
-          title: new Text('Plugin example app'),
+          title: new Text('GPS Location Leaker'),
         ),
         body: new Center(
           child: new Column(children: <Widget>[
-            new Text('Running on: $_platformVersion\n'),
-            new DropdownButton(
-                items: _getDropDownItems(),
-                value: permission,
-                onChanged: onDropDownChanged),
-            new RaisedButton(
-                onPressed: checkPermission,
-                child: new Text("Check permission")),
+            new Text('Status of permission READ_EXTERNAL_STORAGE : $_permissionStatus'),
             new RaisedButton(
                 onPressed: requestPermission,
                 child: new Text("Request permission")),
             new RaisedButton(
-                onPressed: getPermissionStatus,
-                child: new Text("Get permission status")),
-            new RaisedButton(
-                onPressed: SimplePermissions.openSettings,
-                child: new Text("Open settings"))
+                onPressed: refreshGPSLocation,
+                child: new Text("Obtain GPS Location")),
+          new Text(_gpsLocationText),
           ]),
         ),
       ),
     );
-  }
-
-  onDropDownChanged(Permission permission) {
-    setState(() => this.permission = permission);
-    print(permission);
   }
 
   requestPermission() async {
@@ -88,46 +75,39 @@ class _MyAppState extends State<MyApp> {
     print("permission request result is " + res.toString());
   }
 
-  checkPermission() async {
-    bool res = await SimplePermissions.checkPermission(permission);
-    print("permission is " + res.toString());
-  }
-
-  getPermissionStatus() async {
-    final res = await SimplePermissions.getPermissionStatus(permission);
-    print("permission status is " + res.toString());
-  }
-
-  List<DropdownMenuItem<Permission>> _getDropDownItems() {
-    List<DropdownMenuItem<Permission>> items = new List();
-    Permission.values.forEach((permission) {
-      var item = new DropdownMenuItem(
-          child: new Text(getPermissionString(permission)), value: permission);
-      items.add(item);
+  refreshGPSLocation() async {
+    String text = await getExifOf(await obtainMostRecentPicture());
+    setState(() {
+      _gpsLocationText = text;
     });
-    return items;
   }
 }
 
-printDirectories() async {
+Future<File> obtainMostRecentPicture() async {
   List<AssetPathEntity> list = await PhotoManager.getAssetPathList();
-  AssetPathEntity assetPathEntity = list[0];
+  AssetPathEntity assetPathEntity = list.where((AssetPathEntity entity) => entity.name == 'Camera').toList()[0];
   List<AssetEntity> list2 = await assetPathEntity.assetList;
   File file = await list2[0].file;
-  await printExifOf(file);
+  return file;
 }
 
-printExifOf(File file) async {
+Future<String> getExifOf(File file) async {
   Map<String, IfdTag> data = await readExifFromBytes(await file.readAsBytes());
-
+  String result;
   if (data == null || data.isEmpty) {
-    print("No EXIF information found\n");
-    return;
+    result = "No EXIF information found";
+  } else {
+    final Map<String, IfdTag> filteredData = Map.from(data)
+      ..removeWhere((k, v) => !k.startsWith("GPS"));
+    if(filteredData.isEmpty){
+      result = "No GPS information found";
+    } else {
+      result = "";
+      for (String key in filteredData.keys) {
+        result+="$key (${data[key].tagType}): ${data[key]}\n";
+      }
+    }
   }
-
-  for (String key in data.keys) {
-    print("$key (${data[key].tagType}): ${data[key]}");
-  }
-
+  print(result);
+  return result;
 }
-
