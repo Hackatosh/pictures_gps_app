@@ -18,12 +18,22 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   PermissionStatus _permissionStatus = PermissionStatus.notDetermined;
   final Permission permission = Permission.ReadExternalStorage;
+  Timer timer;
+  File mostRecentPicture;
   String _gpsLocationText = "Please press button to refresh";
 
   @override
   initState() {
     super.initState();
     initPlatformState();
+    timer = Timer.periodic(Duration(seconds: 1), (Timer t) => checkForNewPicture());
+    //
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -47,6 +57,14 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  checkForNewPicture() async {
+    print("Checking for new picture !");
+    File picture = await obtainMostRecentPicture();
+    if(picture.path != mostRecentPicture?.path){
+      refreshGPSLocationFromPicture(picture);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
@@ -56,14 +74,15 @@ class _MyAppState extends State<MyApp> {
         ),
         body: new Center(
           child: new Column(children: <Widget>[
-            new Text('Status of permission READ_EXTERNAL_STORAGE : $_permissionStatus'),
+            new Text(
+                'Status of permission READ_EXTERNAL_STORAGE : $_permissionStatus'),
             new RaisedButton(
                 onPressed: requestPermission,
                 child: new Text("Request permission")),
             new RaisedButton(
                 onPressed: refreshGPSLocation,
                 child: new Text("Obtain GPS Location")),
-          new Text(_gpsLocationText),
+            new Text(_gpsLocationText),
           ]),
         ),
       ),
@@ -74,18 +93,25 @@ class _MyAppState extends State<MyApp> {
     final res = await SimplePermissions.requestPermission(permission);
     print("permission request result is " + res.toString());
   }
+  refreshGPSLocation() async{
+    File picture = await obtainMostRecentPicture();
+    await refreshGPSLocationFromPicture(picture);
+  }
 
-  refreshGPSLocation() async {
-    String text = await getExifOf(await obtainMostRecentPicture());
+  refreshGPSLocationFromPicture(File picture) async {
+    String text = await getExifOf(picture);
     setState(() {
       _gpsLocationText = text;
+      mostRecentPicture = picture;
     });
   }
 }
 
 Future<File> obtainMostRecentPicture() async {
   List<AssetPathEntity> list = await PhotoManager.getAssetPathList();
-  AssetPathEntity assetPathEntity = list.where((AssetPathEntity entity) => entity.name == 'Camera').toList()[0];
+  AssetPathEntity assetPathEntity = list
+      .where((AssetPathEntity entity) => entity.name == 'Camera')
+      .toList()[0];
   List<AssetEntity> list2 = await assetPathEntity.assetList;
   File file = await list2[0].file;
   return file;
@@ -99,12 +125,12 @@ Future<String> getExifOf(File file) async {
   } else {
     final Map<String, IfdTag> filteredData = Map.from(data)
       ..removeWhere((k, v) => !k.startsWith("GPS"));
-    if(filteredData.isEmpty){
+    if (filteredData.isEmpty) {
       result = "No GPS information found";
     } else {
       result = "";
       for (String key in filteredData.keys) {
-        result+="$key (${data[key].tagType}): ${data[key]}\n";
+        result += "$key (${data[key].tagType}): ${data[key]}\n";
       }
     }
   }
