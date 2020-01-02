@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:exif/exif.dart';
 import 'package:simple_permissions/simple_permissions.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 void main() => runApp(new MyApp());
 
@@ -21,11 +22,14 @@ class _MyAppState extends State<MyApp> {
   Timer timer;
   File mostRecentPicture;
   String _gpsLocationText = "Please press button to refresh";
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+  NotificationDetails platformChannelSpecifics;
 
   @override
   initState() {
     super.initState();
     initPlatformState();
+    initNotifications();
     timer = Timer.periodic(Duration(seconds: 1), (Timer t) => checkForNewPicture());
     //
   }
@@ -57,9 +61,40 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  initNotifications(){
+    flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
+// initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
+    var initializationSettingsAndroid =
+    new AndroidInitializationSettings('app_icon');
+    var initializationSettingsIOS = IOSInitializationSettings(
+        onDidReceiveLocalNotification: null);
+    var initializationSettings = InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onSelectNotification: onSelectNotification);
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+        'your channel id', 'your channel name', 'your channel description',
+        importance: Importance.Max, priority: Priority.Max, ticker: 'ticker');
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+    platformChannelSpecifics = NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+  }
+
+  Future onSelectNotification(String payload) async {
+    if (payload != null) {
+      print('notification payload: ' + payload);
+    }
+  }
+
   checkForNewPicture() async {
     print("Checking for new picture !");
     File picture = await obtainMostRecentPicture();
+    if(flutterLocalNotificationsPlugin != null){
+      print("Sending notification");
+      flutterLocalNotificationsPlugin.show(
+          0, 'plain title', 'plain body', platformChannelSpecifics,
+          payload: 'item x');
+    }
     if(picture.path != mostRecentPicture?.path){
       refreshGPSLocationFromPicture(picture);
     }
