@@ -12,34 +12,39 @@ import 'pictures.dart';
 
 void main() => runApp(new MyApp());
 
-
-
 class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => new _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
+  // Misc
   PermissionStatus _permissionStatus = PermissionStatus.notDetermined;
   final Permission permission = Permission.Camera;
-  String _gpsLocationText = "Please press button to refresh";
+  Timer _timer;
+  // Managers
   NotificationsManager _notificationsManager;
   PicturesManager _picturesManager;
   CamerasManager _camerasManager;
-  Image _currentImage;
+  // UI relatives
+  Picture _pictureToShow;
+
 
   @override
   initState() {
     super.initState();
     initPermissionStatus();
-    initCamerasManager();
+    _camerasManager = CamerasManager();
     _notificationsManager = NotificationsManager();
-    _picturesManager = PicturesManager(refreshGPSLocationFromPictureCallback, false);
+    _picturesManager =
+        PicturesManager(refreshPictureCallback, false);
+    _timer = Timer.periodic(Duration(seconds: 15), (Timer t) => takePicture());
   }
 
   @override
   void dispose() {
     _picturesManager.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -64,45 +69,40 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  initCamerasManager() async {
-    CamerasManager camerasManager = await CamerasManager.createCamerasManager();
-    if(!mounted) return;
-
-    setState(() {
-      _camerasManager = camerasManager;
-    });
-  }
-
-
   @override
   Widget build(BuildContext context) {
+    List<Widget> widgets = [
+      new Text(
+          'Status of permission Camera Permission : $_permissionStatus'),
+      new RaisedButton(
+          onPressed: requestPermission,
+          child: new Text("Request permission")),
+      new RaisedButton(
+          onPressed: triggerPicturesManagerUpdate,
+          child: new Text("Obtain GPS Location")),
+      new RaisedButton(
+          onPressed: _picturesManager.startTimer,
+          child: new Text("Launch camera folder watcher")),
+      new RaisedButton(
+          onPressed: _picturesManager.stopTimer,
+          child: new Text("Stop camera folder watcher")),
+      new RaisedButton(
+          onPressed: takePicture, child: new Text("Take picture")),
+    ];
+    widgets.addAll(
+    _pictureToShow == null ?
+    [new Text("Please take a picture")] :
+    [
+    new Text(_pictureToShow.exifInfos),
+    _pictureToShow.image,
+    ]);
     return new MaterialApp(
       home: new Scaffold(
         appBar: new AppBar(
           title: new Text('GPS Location Leaker'),
         ),
         body: new Center(
-          child: new Column(children: <Widget>[
-            new Text(
-                'Status of permission Camera Permission : $_permissionStatus'),
-            new RaisedButton(
-                onPressed: requestPermission,
-                child: new Text("Request permission")),
-            new RaisedButton(
-                onPressed: triggerPicturesManagerUpdate,
-                child: new Text("Obtain GPS Location")),
-            new RaisedButton(
-                onPressed: _picturesManager.startTimer,
-                child: new Text("Launch camera folder watcher")),
-            new RaisedButton(
-                onPressed: _picturesManager.stopTimer,
-                child: new Text("Stop camera folder watcher")),
-            new RaisedButton(
-                onPressed: takePicture,
-                child: new Text("Take picture")),
-            new Text(_gpsLocationText),
-            _currentImage ?? new Text("Please take a picture"),
-          ]),
+          child: new Column(children: widgets),
         ),
       ),
     );
@@ -113,25 +113,27 @@ class _MyAppState extends State<MyApp> {
     print("permission request result is " + res.toString());
   }
 
-  triggerPicturesManagerUpdate() async{
-    _picturesManager.updateMostRecentPicture(refreshGPSLocationFromPictureCallback);
+  triggerPicturesManagerUpdate() async {
+    _picturesManager
+        .updateMostRecentPicture(refreshPictureCallback);
   }
 
-  refreshGPSLocationFromPictureCallback(String gpsInfos) async {
+  refreshPictureCallback(Picture picture) async {
     setState(() {
-      _gpsLocationText = gpsInfos;
+      _pictureToShow = picture;
     });
-    GPSLocationNotification notification = new GPSLocationNotification(id: 0, title: "GPS Location updated !", body: "A new photo has triggered the GPS location update", payload: gpsInfos);
+    GPSLocationNotification notification = new GPSLocationNotification(
+        id: 0,
+        title: "GPS Location updated !",
+        body: "A new photo has triggered the GPS location update",
+        payload: picture.exifInfos);
     _notificationsManager.sendNotification(notification);
   }
 
   takePicture() async {
-    String path = await _camerasManager.takePicture();
-    print(path);
-    PicturesManager.getExifOf(File(path));
+    Picture picture = await _camerasManager.takePicture();
     setState(() {
-      _currentImage = Image.file(File(path));
+      _pictureToShow = picture;
     });
   }
 }
-
