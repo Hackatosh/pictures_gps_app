@@ -27,6 +27,8 @@ dependencies:
   simple_permissions: ^0.1.9
   photo_manager: ^0.4.5
   flutter_local_notifications: ^0.9.1+1
+  camera: ^0.5.7+2
+  path:
 
 dev_dependencies:
   flutter_test:

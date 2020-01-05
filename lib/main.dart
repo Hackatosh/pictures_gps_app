@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pictures_gps_app/cameras.dart';
 
 import 'package:simple_permissions/simple_permissions.dart';
 
@@ -20,27 +21,30 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   PermissionStatus _permissionStatus = PermissionStatus.notDetermined;
-  final Permission permission = Permission.ReadExternalStorage;
+  final Permission permission = Permission.Camera;
   String _gpsLocationText = "Please press button to refresh";
-  NotificationsManager notificationsManager;
-  PicturesManager picturesManager;
+  NotificationsManager _notificationsManager;
+  PicturesManager _picturesManager;
+  CamerasManager _camerasManager;
+  Image _currentImage;
 
   @override
   initState() {
     super.initState();
-    initPlatformState();
-    notificationsManager = NotificationsManager();
-    picturesManager = PicturesManager(refreshGPSLocationFromPictureCallback, true);
+    initPermissionStatus();
+    initCamerasManager();
+    _notificationsManager = NotificationsManager();
+    _picturesManager = PicturesManager(refreshGPSLocationFromPictureCallback, false);
   }
 
   @override
   void dispose() {
-    picturesManager.dispose();
+    _picturesManager.dispose();
     super.dispose();
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
-  initPlatformState() async {
+  initPermissionStatus() async {
     PermissionStatus permissionStatus;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
@@ -60,6 +64,15 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  initCamerasManager() async {
+    CamerasManager camerasManager = await CamerasManager.createCamerasManager();
+    if(!mounted) return;
+
+    setState(() {
+      _camerasManager = camerasManager;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -71,14 +84,24 @@ class _MyAppState extends State<MyApp> {
         body: new Center(
           child: new Column(children: <Widget>[
             new Text(
-                'Status of permission READ_EXTERNAL_STORAGE : $_permissionStatus'),
+                'Status of permission Camera Permission : $_permissionStatus'),
             new RaisedButton(
                 onPressed: requestPermission,
                 child: new Text("Request permission")),
             new RaisedButton(
                 onPressed: triggerPicturesManagerUpdate,
                 child: new Text("Obtain GPS Location")),
+            new RaisedButton(
+                onPressed: _picturesManager.startTimer,
+                child: new Text("Launch camera folder watcher")),
+            new RaisedButton(
+                onPressed: _picturesManager.stopTimer,
+                child: new Text("Stop camera folder watcher")),
+            new RaisedButton(
+                onPressed: takePicture,
+                child: new Text("Take picture")),
             new Text(_gpsLocationText),
+            _currentImage ?? new Text("Please take a picture"),
           ]),
         ),
       ),
@@ -91,7 +114,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   triggerPicturesManagerUpdate() async{
-    picturesManager.updateMostRecentPicture(refreshGPSLocationFromPictureCallback);
+    _picturesManager.updateMostRecentPicture(refreshGPSLocationFromPictureCallback);
   }
 
   refreshGPSLocationFromPictureCallback(String gpsInfos) async {
@@ -99,8 +122,16 @@ class _MyAppState extends State<MyApp> {
       _gpsLocationText = gpsInfos;
     });
     GPSLocationNotification notification = new GPSLocationNotification(id: 0, title: "GPS Location updated !", body: "A new photo has triggered the GPS location update", payload: gpsInfos);
-    notificationsManager.sendNotification(notification);
+    _notificationsManager.sendNotification(notification);
   }
 
+  takePicture() async {
+    String path = await _camerasManager.takePicture();
+    print(path);
+    PicturesManager.getExifOf(File(path));
+    setState(() {
+      _currentImage = Image.file(File(path));
+    });
+  }
 }
 

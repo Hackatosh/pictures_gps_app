@@ -21,6 +21,15 @@ class PicturesManager {
     _timer?.cancel();
   }
 
+  void startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(Duration(seconds: 1), (Timer t) => updateMostRecentPicture(_updateMostRecentPictureCallback));
+  }
+
+  void stopTimer() {
+    _timer?.cancel();
+  }
+
   Future<void> updateMostRecentPicture(Function callback) async{
     print("Checking for new picture !");
     File picture = await PicturesManager.obtainMostRecentPicture();
