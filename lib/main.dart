@@ -7,6 +7,7 @@ import 'package:pictures_gps_app/cameras.dart';
 
 import 'package:simple_permissions/simple_permissions.dart';
 
+import 'customTask.dart';
 import 'notifications.dart';
 import 'pictures.dart';
 
@@ -21,11 +22,10 @@ class _MyAppState extends State<MyApp> {
   // Misc
   PermissionStatus _permissionStatus = PermissionStatus.notDetermined;
   final Permission permission = Permission.Camera;
-  Timer _timer;
+  CustomTask _watchCameraFolderTask;
+  CustomTask _takeAutomaticPictureTask;
   // Managers
   NotificationsManager _notificationsManager;
-  PicturesManager _picturesManager;
-  CamerasManager _camerasManager;
   // UI relatives
   Picture _pictureToShow;
 
@@ -34,18 +34,16 @@ class _MyAppState extends State<MyApp> {
   initState() {
     super.initState();
     initPermissionStatus();
-    _camerasManager = CamerasManager();
     _notificationsManager = NotificationsManager();
-    _picturesManager =
-        PicturesManager(refreshPictureCallback, false);
     // Uncomment to reactivate automatic shots
-    //_timer = Timer.periodic(Duration(seconds: 15), (Timer t) => takePicture());
+    _watchCameraFolderTask = CustomTask(Duration(seconds: 5), (Timer timer) => refreshFromCameraFolder());
+    _takeAutomaticPictureTask = CustomTask(Duration(seconds: 15), (Timer timer) => takePicture());
   }
 
   @override
   void dispose() {
-    _picturesManager.dispose();
-    _timer?.cancel();
+    _watchCameraFolderTask.dispose();
+    _takeAutomaticPictureTask.dispose();
     super.dispose();
   }
 
@@ -79,14 +77,20 @@ class _MyAppState extends State<MyApp> {
           onPressed: requestPermission,
           child: new Text("Request permission")),
       new RaisedButton(
-          onPressed: triggerPicturesManagerUpdate,
-          child: new Text("Obtain GPS Location")),
+          onPressed: refreshFromCameraFolder,
+          child: new Text("Find latest picture from camera")),
       new RaisedButton(
-          onPressed: _picturesManager.startTimer,
+          onPressed: _watchCameraFolderTask.start,
           child: new Text("Launch camera folder watcher")),
       new RaisedButton(
-          onPressed: _picturesManager.stopTimer,
+          onPressed: _watchCameraFolderTask.stop,
           child: new Text("Stop camera folder watcher")),
+      new RaisedButton(
+          onPressed: _takeAutomaticPictureTask.start,
+          child: new Text("Start automatic pictures")),
+      new RaisedButton(
+          onPressed: _takeAutomaticPictureTask.stop,
+          child: new Text("Stop automatic pictures")),
       new RaisedButton(
           onPressed: takePicture, child: new Text("Take picture")),
     ];
@@ -97,13 +101,16 @@ class _MyAppState extends State<MyApp> {
     new Text(_pictureToShow.exifInfos),
     _pictureToShow.image,
     ]);
+
     return new MaterialApp(
       home: new Scaffold(
         appBar: new AppBar(
           title: new Text('GPS Location Leaker'),
         ),
         body: new Center(
+        child: new SingleChildScrollView(
           child: new Column(children: widgets),
+        ),
         ),
       ),
     );
@@ -114,12 +121,15 @@ class _MyAppState extends State<MyApp> {
     print("permission request result is " + res.toString());
   }
 
-  triggerPicturesManagerUpdate() async {
-    _picturesManager
-        .updateMostRecentPicture(refreshPictureCallback);
+  refreshFromCameraFolder() async {
+    refreshPictureFrom(await PicturesManager.obtainMostRecentFromCamera());
   }
 
-  refreshPictureCallback(Picture picture) async {
+  takePicture() async {
+    refreshPictureFrom(await CamerasManager.getPictureFromCamera());
+  }
+
+  refreshPictureFrom(Picture picture) async {
     setState(() {
       _pictureToShow = picture;
     });
@@ -129,13 +139,6 @@ class _MyAppState extends State<MyApp> {
         body: "A new photo has triggered the GPS location update",
         payload: picture.exifInfos);
     _notificationsManager.sendNotification(notification);
-  }
-
-  takePicture() async {
-    Picture picture = await _camerasManager.takePicture();
-    setState(() {
-      _pictureToShow = picture;
-    });
   }
 
 }

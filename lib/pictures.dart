@@ -6,48 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 class PicturesManager {
-  Picture _mostRecentPicture;
-  void Function(Picture picture) _updateMostRecentPictureCallback;
-  Timer _timer;
 
-  PicturesManager(this._updateMostRecentPictureCallback, bool withPeriodicUpdate){
-    if(withPeriodicUpdate){
-      _timer = Timer.periodic(Duration(seconds: 1), (Timer t) => updateMostRecentPicture(_updateMostRecentPictureCallback));
-    } else {
-      _timer = null;
-    }
-  }
-
-  void dispose() {
-    _timer?.cancel();
-  }
-
-  void startTimer() {
-    _timer?.cancel();
-    _timer = Timer.periodic(Duration(seconds: 1), (Timer t) => updateMostRecentPicture(_updateMostRecentPictureCallback));
-  }
-
-  void stopTimer() {
-    _timer?.cancel();
-  }
-
-  Future<void> updateMostRecentPicture(Function callback) async{
-    print("Checking for new picture !");
-    Picture picture = await PicturesManager.obtainMostRecentPicture();
-    if(picture.path != _mostRecentPicture?.path){
-      _mostRecentPicture = picture;
-      _updateMostRecentPictureCallback(picture);
-    }
-  }
-
-  static Future<Picture> obtainMostRecentPicture() async {
+  static Future<Picture> obtainMostRecentFromCamera({bool compareToLastPicture = false}) async {
     List<AssetPathEntity> list = await PhotoManager.getAssetPathList();
     AssetPathEntity assetPathEntity = list
         .where((AssetPathEntity entity) => entity.name == 'Camera')
         .toList()[0];
     List<AssetEntity> list2 = await assetPathEntity.assetList;
     File file = await list2[0].file;
-    return await Picture.asyncCreateFromFile(file);
+    Picture picture = await Picture.asyncCreateFromFile(file);
+    return picture;
   }
 }
 

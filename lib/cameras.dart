@@ -20,8 +20,7 @@ class CamerasManager {
     );
   }
 
-  // Return the path of the picture
-  Future<Picture> takePicture() async {
+  static Future<Picture> getPictureFromCamera() async {
     CameraController controller = await _createCameraController();
     Picture picture;
     try {
@@ -46,4 +45,5 @@ class CamerasManager {
     }
     return picture;
   }
+
 }
