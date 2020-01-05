@@ -38,7 +38,8 @@ class _MyAppState extends State<MyApp> {
     _notificationsManager = NotificationsManager();
     _picturesManager =
         PicturesManager(refreshPictureCallback, false);
-    _timer = Timer.periodic(Duration(seconds: 15), (Timer t) => takePicture());
+    // Uncomment to reactivate automatic shots
+    //_timer = Timer.periodic(Duration(seconds: 15), (Timer t) => takePicture());
   }
 
   @override
@@ -136,4 +137,5 @@ class _MyAppState extends State<MyApp> {
       _pictureToShow = picture;
     });
   }
+
 }
