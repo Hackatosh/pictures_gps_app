@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SetupScreen extends StatefulWidget {
-  final Future<void>  Function(BuildContext context, String ip) goToNextScreen;
+  final Future<void>  Function(BuildContext context, String url) goToNextScreen;
 
   const SetupScreen({Key key,@required this.goToNextScreen}) : super(key: key);
 

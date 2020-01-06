@@ -29,6 +29,7 @@ dependencies:
   flutter_local_notifications: ^0.9.1+1
   camera: ^0.5.7+2
   path:
+  http: ^0.12.0
 
 dev_dependencies:
   flutter_test:

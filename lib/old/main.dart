@@ -7,7 +7,7 @@ import 'package:pictures_gps_app/old/cameras.dart';
 
 import 'package:simple_permissions/simple_permissions.dart';
 
-import '../managers/customTask.dart';
+import 'customTask.dart';
 import 'notifications.dart';
 import '../managers/pictures.dart';
 
@@ -98,7 +98,7 @@ class _MyAppState extends State<MyApp> {
     _pictureToShow == null ?
     [new Text("Please take a picture")] :
     [
-    new Text(_pictureToShow.exifInfos),
+    new Text(_pictureToShow.exifInfos.toString()),
     _pictureToShow.image,
     ]);
 
@@ -137,7 +137,7 @@ class _MyAppState extends State<MyApp> {
         id: 0,
         title: "GPS Location updated !",
         body: "A new photo has triggered the GPS location update",
-        payload: picture.exifInfos);
+        payload: picture.exifInfos.toString());
     _notificationsManager.sendNotification(notification);
   }
 
