@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'pictures.dart';
+import '../managers/pictures.dart';
 
 class CamerasManager {
 
