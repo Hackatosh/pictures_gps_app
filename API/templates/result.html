@@ -9,8 +9,18 @@
             Http.send();
             Http.onreadystatechange = (e) => {
                 response=JSON.parse(Http.responseText)["results"];
+                old_size=stolen_Info.length;
+                if (old_size < response.length) {
+                    for (let i=0; i<response.length-old_size; i++){
+                        locations = document.getElementById("locations");
+                        var div = document.createElement('div');
+                        div.innerHTML = ('<p> userID: '+ response[old_size+i]["userId"]+' | location: ' + response[old_size+i]["exifInfos"]+'</p>').trim();
+                        locations.appendChild(div.firstChild);
+                        old_size=response.length
+                        stolen_Info=response
+                    }
+                }
                 console.log(response);
-                document.getElementById("locations").appendChild(document.createTextNode(response));
             }  
         ;}, 2000);
         

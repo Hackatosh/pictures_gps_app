@@ -1,7 +1,7 @@
 from flask import Flask, json, request, jsonify, render_template
 
 LOCATION_STOLEN={"userId1":[0.0, 0.0, 0.0]}
-LOCATION_STOLEN_LIST=["test"]
+LOCATION_STOLEN_LIST=[{'userId': "Doudou", "exifInfos":[0.0, 0.0, 0.0]}]
 
 app = Flask(__name__)
 
