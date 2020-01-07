@@ -14,7 +14,7 @@
                     for (let i=0; i<response.length-old_size; i++){
                         locations = document.getElementById("locations");
                         var div = document.createElement('div');
-                        div.innerHTML = ('<p> userID: '+ response[old_size+i]["userId"]+' | location: ' + response[old_size+i]["exifInfos"]+'</p>').trim();
+                        div.innerHTML = ('<p> userID: '+ response[old_size+i]["userId"]+' | location: ' + response[old_size+i]["exifInfos"].toString()+'</p>').trim();
                         locations.appendChild(div.firstChild);
                     }
                     old_size=response.length

@@ -11,8 +11,9 @@ def hello():
 
 @app.route('/newInfoStolen', methods = ['POST'])
 def api_message():
-    if request.headers['Content-Type'] == 'application/json':
+    if 'application/json' in request.headers['Content-Type']:
         content = request.json
+        print(content)
         userId = content["userId"]
         LOCATION_STOLEN_LIST.append(content)
         if userId is not None :
