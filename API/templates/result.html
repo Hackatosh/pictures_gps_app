@@ -16,9 +16,9 @@
                         var div = document.createElement('div');
                         div.innerHTML = ('<p> userID: '+ response[old_size+i]["userId"]+' | location: ' + response[old_size+i]["exifInfos"]+'</p>').trim();
                         locations.appendChild(div.firstChild);
-                        old_size=response.length
-                        stolen_Info=response
                     }
+                    old_size=response.length
+                    stolen_Info=response
                 }
                 console.log(response);
             }  
