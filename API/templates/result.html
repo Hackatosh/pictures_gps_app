@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <script type="text/javascript">
+        stolen_Info = [] 
+        const Http = new XMLHttpRequest();
+        const url = "http://localhost:5000/getStolenInfo"
+        window.setInterval(function() {
+            Http.open("GET", url);
+            Http.send();
+            Http.onreadystatechange = (e) => {
+                response=JSON.parse(Http.responseText)["results"];
+                console.log(response);
+                document.getElementById("locations").appendChild(document.createTextNode(response));
+            }  
+        ;}, 2000);
+        
+        
+      </script>
+    <head>
+        <title>Mobile vulnerability</title>
+    </head>
+    <body>
+        <h2>Locations hacked</h2>
+        <div id="locations">
+        </div>
+    </body>
+</html>
