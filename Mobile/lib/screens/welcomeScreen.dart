@@ -5,7 +5,8 @@ import 'package:simple_permissions/simple_permissions.dart';
 
 class WelcomeScreen extends StatelessWidget {
   WelcomeScreen({@required this.goToNextScreen});
-  final Future<void>  Function(BuildContext context) goToNextScreen;
+
+  final Future<void> Function(BuildContext context) goToNextScreen;
 
   @override
   Widget build(BuildContext context) {
@@ -14,22 +15,53 @@ class WelcomeScreen extends StatelessWidget {
         title: Text('Welcome to Awesome Meme !'),
       ),
       body: Center(
-        child: RaisedButton(
-          child: Text('Turn latest picture into awesome meme and share with friends !'),
-          onPressed: () => _onPressed(context),
-        ),
+        child: Column(children: [
+          Container(
+            margin: EdgeInsets.fromLTRB(40, 40, 40, 30),
+            padding: EdgeInsets.fromLTRB(25, 10, 25, 10),
+            decoration: BoxDecoration(
+                color: Colors.lightBlue,
+                border: Border.all(
+                  color: Colors.indigo,
+                  width: 4.0,
+                ),
+                borderRadius: new BorderRadius.all(Radius.circular(10.0))),
+            child: Text(
+              "\n WELCOME ! \n \n Why not take your latest picture and turn it into a meme to share with your friends ? :D \n",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          RaisedButton(
+            child: Text(
+                'Make an Awesome Meme !',
+              style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+            ),
+            onPressed: () => _onPressed(context),
+          )
+        ]),
       ),
     );
   }
 
   Future<void> _onPressed(BuildContext context) async {
     PermissionStatus permissionStatus;
-    if(await SimplePermissions.getPermissionStatus(Permission.ReadExternalStorage) != PermissionStatus.authorized){
-      permissionStatus = await SimplePermissions.requestPermission(Permission.ReadExternalStorage);
+    if (await SimplePermissions.getPermissionStatus(
+            Permission.ReadExternalStorage) !=
+        PermissionStatus.authorized) {
+      permissionStatus = await SimplePermissions.requestPermission(
+          Permission.ReadExternalStorage);
     } else {
       permissionStatus = PermissionStatus.authorized;
     }
-    if(permissionStatus == PermissionStatus.authorized){
+    if (permissionStatus == PermissionStatus.authorized) {
       goToNextScreen(context);
     } else {
       _showDialog(context);

