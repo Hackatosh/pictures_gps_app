@@ -30,7 +30,7 @@ class _SetupScreenState extends State<SetupScreen> {
                     ),
                     borderRadius: new BorderRadius.all(Radius.circular(10.0))),
                 child: Text(
-                  "Please enter the chinese server's IP",
+                  "Please enter the NSA server's IP",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
