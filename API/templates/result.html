@@ -1,37 +1,37 @@
 <!DOCTYPE html>
 <html>
-    <script type="text/javascript">
-        stolen_Info = [] 
-        const Http = new XMLHttpRequest();
-        const url = "http://localhost:5000/getStolenInfo"
-        window.setInterval(function() {
-            Http.open("GET", url);
-            Http.send();
-            Http.onreadystatechange = (e) => {
-                response=JSON.parse(Http.responseText)["results"];
-                old_size=stolen_Info.length;
-                if (old_size < response.length) {
-                    for (let i=0; i<response.length-old_size; i++){
-                        locations = document.getElementById("locations");
-                        var div = document.createElement('div');
-                        div.innerHTML = ('<p> userID: '+ response[old_size+i]["userId"]+' | location: ' + JSON.stringify([old_size+i]["exifInfos"])+'</p>').trim();
-                        locations.appendChild(div.firstChild);
-                    }
-                    old_size=response.length
-                    stolen_Info=response
+<script type="text/javascript">
+    let stolen_Info = [];
+    const Http = new XMLHttpRequest();
+    const url = "http://localhost:5000/getStolenInfo";
+    window.setInterval(function () {
+        Http.open("GET", url);
+        Http.send();
+        Http.onreadystatechange = (e) => {
+            let response = JSON.parse(Http.responseText)["results"];
+            let old_size = stolen_Info.length;
+            if (old_size < response.length) {
+                for (let i = 0; i < response.length - old_size; i++) {
+                    let locations = document.getElementById("locations");
+                    let div = document.createElement('div');
+                    div.innerHTML = ('<p> userID: ' + response[old_size + i]["userId"] + ' | location: ' + JSON.stringify(response[old_size + i]["exifInfos"]) + '</p>').trim();
+                    locations.appendChild(div.firstChild);
                 }
-                console.log(response);
-            }  
-        ;}, 2000);
-        
-        
-      </script>
-    <head>
-        <title>Mobile vulnerability</title>
-    </head>
-    <body>
-        <h2>Locations hacked</h2>
-        <div id="locations">
-        </div>
-    </body>
+                stolen_Info = response;
+            }
+            console.log(response);
+        }
+        ;
+    }, 2000);
+
+
+</script>
+<head>
+    <title>Mobile vulnerability</title>
+</head>
+<body>
+<h2>Locations hacked</h2>
+<div id="locations">
+</div>
+</body>
 </html>
